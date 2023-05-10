@@ -71,25 +71,6 @@ std::vector<Vector*> Network::ForwardPropogation(Vector in) {
     return activations;
 }
 
-// double Normalize(double in) {
-//     // std::cout << "Normalize Function" << std::endl;
-//     // std::cout << in << std::endl;
-//     return (in + 1) / 2;
-// }
-
-Vector softmax(Vector in) {
-    std::vector<double> out(in.Size());
-    double sum = 0;
-    for (int i = 0; i < out.size(); i++) {
-        double v = in.Get(i);
-        sum += v;
-    }
-    for (int i = 0; i < in.Size(); i++) {
-        out[i] = in.Get(i) / sum;
-    }
-    return Vector(out);
-}
-
 std::vector<Vector> Network::Activations(Vector in) {
     std::vector<Vector> activations(this->weights.size() + 1);
 
@@ -100,9 +81,6 @@ std::vector<Vector> Network::Activations(Vector in) {
     }
 
     std::reverse(activations.begin(), activations.end());
-
-    // activations[0] = activations[0].Apply(Normalize);
-    // activations[0] = softmax(activations[0]);
 
     return activations;
 }

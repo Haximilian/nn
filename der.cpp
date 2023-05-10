@@ -35,6 +35,21 @@ std::vector<Matrix> SigmaJsigmaA(
     return toReturn;
 }
 
+Vector softmax(Vector in) {
+    std::vector<double> out(in.Size());
+    double sum = 0;
+    for (int i = 0; i < out.size(); i++) {
+        double v = in.Get(i);
+        sum += v;
+    }
+    for (int i = 0; i < in.Size(); i++) {
+        out[i] = in.Get(i) / sum;
+    }
+    return Vector(out);
+}
+
+
+
 // calculates the gradient for a given input
 // activation[0] equals (tanh(z) + 1) / 2
 // it's also the output of the neural network
@@ -48,6 +63,10 @@ std::vector<Matrix> Gradients(
 
     std::vector<Matrix> gradients(weights.size());
 
+    Vector predicted = softmax(activations[0]);
+
+    Matrix sigmaCrossEntropySigmaPredicted = VectorToRowMatrix(actual - predicted);
+
     for (int i = 0; i < weights.size(); i++) {
         Matrix sigmaAsigmaZ = *Diag((weights[i] * activations[i + 1]).Apply(TanHPrime));
 
@@ -56,24 +75,12 @@ std::vector<Matrix> Gradients(
         for (int j = 0; j < weights[i].Rows(); j++) {
             for (int k = 0; k < weights[i].Columns(); k++) {
                 std::vector<double> t(activations[i].Size(), 0.0);
-
                 t[j] = activations[i + 1].Get(k);
-
                 Vector sigmaZsigmaW = Vector(t);
-
-                std::cout << "sigmaAsigmaZ" << std::endl;
-                sigmaAsigmaZ.Print();
-                std::cout << "sigmaZsigmaW" << std::endl;
-                sigmaZsigmaW.Print();
 
                 Vector sigmaAsigmaW = sigmaAsigmaZ * sigmaZsigmaW;
 
                 Vector sigmaJsigmaW = sigmaJsigmaA[i] * sigmaAsigmaW;
-
-                // (output_of_nn + 1) / 2
-                // this transformation makes it into a probability
-                // cross entropy loss...
-                Matrix sigmaCrossEntropySigmaPredicted = VectorToRowMatrix(actual - activations[0]);
 
                 double gradient = (sigmaCrossEntropySigmaPredicted * sigmaJsigmaW).Get(0);
 
