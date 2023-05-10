@@ -170,6 +170,16 @@ Matrix Matrix::operator+(const Matrix &m) {
 }
 
 Matrix Matrix::operator/(const double &d) {
+    Matrix toReturn(*this);
+
+    for (int i = 0; i < this->Rows(); i++) {
+        for (int j = 0; j < this->Columns(); j++) {
+            double left = this->Get(i, j);
+             toReturn.Set(i, j, left / d);
+        }
+    }
+
+    return toReturn;
 
 }
 

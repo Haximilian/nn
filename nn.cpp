@@ -94,6 +94,14 @@ Vector* Network::Residual(Vector* in, Vector* out) {
 
 void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector<double>> out) {
     std::vector<Vector> updated_in; 
+    for (auto row: in) {
+        updated_in.push_back(Vector(row));
+    }
+
+    std::vector<Vector> updated_out; 
+    for (auto row: in) {
+        updated_out.push_back(Vector(row));
+    }
 
     std::vector<std::vector<Vector>> activations;
 
@@ -102,6 +110,17 @@ void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector
     for (Vector row: updated_in) {
         std::vector<Vector> activation = this->Activations(row);
         activations.push_back(activation);
+    }
+
+    std::vector<Matrix> weights = dereference(this->weights);
+    std::vector<Matrix> gradients = Gradients(
+        weights,
+        activations,
+        updated_out
+    );
+
+    for (Matrix gradient: gradients) {
+        gradient.Print();
     }
 }
 

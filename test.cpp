@@ -76,21 +76,7 @@ int main(int argc, char** argv) {
 
     out.Print();
 
-    std::vector<Matrix> gradients = Gradients(
-        dereference(network.weights),
-        activations,
-        out
-    );
+    network.Epoch(dataset.in, dataset.out);
 
-    for (Matrix gradient: gradients) {
-        gradient.Print();
-    }
-
-    // std::vector<Matrix*> derivatives = network.Derivatives(activations, &out);
-
-    // for (Matrix* derivatives: derivatives) {
-    //     derivatives->Print();
-    // }
- 
     return 0;
 }
