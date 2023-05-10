@@ -51,3 +51,5 @@ std::vector<Matrix> Gradients(
 ); 
 
 std::vector<Matrix> dereference(std::vector<Matrix*> in);
+
+Vector softmax(Vector in);

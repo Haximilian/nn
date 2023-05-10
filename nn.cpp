@@ -89,8 +89,19 @@ Vector* Network::Residual(Vector* in, Vector* out) {
     return new Vector(*in - *out);
 }
 
-// double cross_entropy()
+double cross_entropy(Vector predicted, Vector expected) {
+    assert(predicted.Size() == expected.Size());
 
+    double acc = 0;
+    for (int i = 0; i < predicted.Size(); i++) {
+        acc += expected.Get(i) * log(predicted.Get(i));
+    }
+    if (isnan(acc)) {
+        predicted.Print();
+    }
+
+    return acc;
+}
 
 void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector<double>> out) {
     std::vector<Vector> updated_in; 
@@ -99,7 +110,7 @@ void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector
     }
 
     std::vector<Vector> updated_out; 
-    for (auto row: in) {
+    for (auto row: out) {
         updated_out.push_back(Vector(row));
     }
 
@@ -107,10 +118,15 @@ void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector
 
     double loss = 0;
 
-    for (Vector row: updated_in) {
+    for (int i = 0; i < updated_in.size(); i++) {
+        Vector row = updated_in[i];
         std::vector<Vector> activation = this->Activations(row);
+        Vector predicted = softmax(activation[0]);
+        loss += cross_entropy(predicted, updated_out[i]);
         activations.push_back(activation);
     }
+
+    std::cout << "Epoch Loss: " << loss << std::endl;
 
     std::vector<Matrix> weights = dereference(this->weights);
     std::vector<Matrix> gradients = Gradients(
@@ -167,11 +183,10 @@ Vector softmax(Vector in) {
     std::vector<double> out(in.Size());
     double sum = 0;
     for (int i = 0; i < out.size(); i++) {
-        double v = in.Get(i);
-        sum += v;
+        sum += exp(in.Get(i));
     }
     for (int i = 0; i < in.Size(); i++) {
-        out[i] = in.Get(i) / sum;
+        out[i] = exp(in.Get(i)) / sum;
     }
     return Vector(out);
 }
