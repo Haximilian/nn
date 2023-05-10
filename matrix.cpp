@@ -152,6 +152,28 @@ Matrix Matrix::operator*(const Matrix &m)
     return toReturn;
 }
 
+Matrix Matrix::operator+(const Matrix &m) {
+    assert(m.Rows() == this->Rows());
+    assert(m.Columns() == this->Columns());
+
+    Matrix toReturn(*this);
+
+    for (int i = 0; i < this->Rows(); i++) {
+        for (int j = 0; j < this->Columns(); j++) {
+            double left = this->Get(i, j);
+            double right = m.Get(i, j);
+            toReturn.Set(i, j, left + right);
+        }
+    }
+
+    return toReturn;
+}
+
+Matrix Matrix::operator/(const double &d) {
+
+}
+
+
 Matrix Matrix::Transpose()
 {
     Matrix toReturn(this->Columns(), this->Rows());

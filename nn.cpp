@@ -89,24 +89,21 @@ Vector* Network::Residual(Vector* in, Vector* out) {
     return new Vector(*in - *out);
 }
 
-// std::vector<Matrix*> Network::Derivatives(std::vector<Vector*> activations, Vector* out)
-// {
-//     Matrix residuals = VectorToRowMatrix(*this->Residual(activations[0], out));
+// double cross_entropy()
 
-//     std::vector<Matrix*> derivatives(weights.size());
 
-//     Matrix t = (-2 * residuals) * *Diag((*this->weights[0] * *activations[1]).Apply(TanHPrime));
-//     Matrix derivative = t * VectorOfAllOnes(this->weights[0]->Rows()) * VectorToRowMatrix(*activations[1]);
-//     derivatives[0] = new Matrix(derivative);
+void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector<double>> out) {
+    std::vector<Vector> updated_in; 
 
-//     for (int i = 1; i < weights.size(); i++) {
-//         t = t * *weights[i - 1] * *Diag((*weights[i] * *activations[1 + 1]).Apply(TanHPrime));
-//         derivative = t * VectorOfAllOnes(weights[i]->Rows()) * VectorToRowMatrix(*activations[i + 1]);
-//         derivatives[i] = new Matrix(derivative);
-//     }
+    std::vector<std::vector<Vector>> activations;
 
-//     return derivatives;
-// }
+    double loss = 0;
+
+    for (Vector row: updated_in) {
+        std::vector<Vector> activation = this->Activations(row);
+        activations.push_back(activation);
+    }
+}
 
 void Network::Print() {
     std::cout << "---------- Network Print ----------" << std::endl;
@@ -114,4 +111,123 @@ void Network::Print() {
     for (Matrix* matrix: this->weights) {
         matrix->Print();
     }
+}
+
+std::vector<Matrix> dereference(std::vector<Matrix*> in) {
+    std::vector<Matrix> toReturn;
+    for (Matrix* m: in) {
+        toReturn.push_back(*m);
+    }
+    return toReturn;
+}
+
+// returns vector of matrix
+// matrix dimensions
+// rows: dim(a_{0})
+// columns: dim(a_{i})
+std::vector<Matrix> SigmaJsigmaA(
+    std::vector<Matrix> weights,
+    std::vector<Vector> activations
+)
+{
+    std::vector<Matrix> toReturn(activations.size());
+
+    toReturn[0] = Identity(activations[0].Size());
+
+    for (int i = 1; i < activations.size(); i++) {
+        // current equals sigma a_{i - 1} / sigma a_{i}
+        Matrix current = *Diag((weights[i - 1] * activations[i]).Apply(TanHPrime)) * weights[i - 1];
+
+        toReturn[i] = toReturn[i - 1] * current;
+    }
+
+    return toReturn;
+}
+
+Vector softmax(Vector in) {
+    std::vector<double> out(in.Size());
+    double sum = 0;
+    for (int i = 0; i < out.size(); i++) {
+        double v = in.Get(i);
+        sum += v;
+    }
+    for (int i = 0; i < in.Size(); i++) {
+        out[i] = in.Get(i) / sum;
+    }
+    return Vector(out);
+}
+
+
+// calculates the gradient for a given input
+// activation[0] equals (tanh(z) + 1) / 2
+// it's also the output of the neural network
+std::vector<Matrix> Gradients(
+    std::vector<Matrix> weights,
+    std::vector<Vector> activations,
+    Vector actual
+)
+{
+    std::vector<Matrix> sigmaJsigmaA = SigmaJsigmaA(weights, activations);
+
+    std::vector<Matrix> gradients(weights.size());
+
+    Vector predicted = softmax(activations[0]);
+
+    Matrix sigmaCrossEntropySigmaPredicted = VectorToRowMatrix(actual - predicted);
+
+    for (int i = 0; i < weights.size(); i++) {
+        Matrix sigmaAsigmaZ = *Diag((weights[i] * activations[i + 1]).Apply(TanHPrime));
+
+        gradients[i] = Matrix(weights[i].Rows(), weights[i].Columns());
+
+        for (int j = 0; j < weights[i].Rows(); j++) {
+            for (int k = 0; k < weights[i].Columns(); k++) {
+                std::vector<double> t(activations[i].Size(), 0.0);
+                t[j] = activations[i + 1].Get(k);
+                Vector sigmaZsigmaW = Vector(t);
+
+                Vector sigmaAsigmaW = sigmaAsigmaZ * sigmaZsigmaW;
+
+                Vector sigmaJsigmaW = sigmaJsigmaA[i] * sigmaAsigmaW;
+
+                double gradient = (sigmaCrossEntropySigmaPredicted * sigmaJsigmaW).Get(0);
+
+                gradients[i].Set(j, k, gradient);
+            }
+        }
+    }
+
+    return gradients;
+}
+
+std::vector<Matrix> Gradients(
+    std::vector<Matrix> weights,
+    std::vector<std::vector<Vector>> activations,
+    std::vector<Vector> actual
+) 
+{
+    assert(activations.size() == actual.size());
+    assert(activations.size() > 0);
+
+    int size = activations.size();
+
+    std::vector<Matrix> gradients = Gradients(
+        weights,
+        activations[0],
+        actual[0]
+    );
+
+    for (int i = 1; i < size; i++) {
+        std::vector<Matrix> t = Gradients(
+            weights,
+            activations[i],
+            actual[i]
+        );
+
+        for (int j = 0; j < gradients.size(); j++) {
+            gradients[j] = gradients[j] + (t[j] / double(size));
+        }
+    }
+
+    return gradients;
 }
