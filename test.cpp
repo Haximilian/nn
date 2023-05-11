@@ -57,12 +57,6 @@ int main(int argc, char** argv) {
 
     in.Print();
 
-    // std::vector<Vector*> activations = network.ForwardPropogation(in);
-
-    // for (Vector* activation: activations) {
-    //     activation->Print();
-    // }
-
     std::cout << "activations" << std::endl;
     std::vector<Vector> activations = network.Activations(in);
 
@@ -76,7 +70,9 @@ int main(int argc, char** argv) {
 
     out.Print();
 
-    network.Epoch(dataset.in, dataset.out);
+    for (int i = 0; i < 10; i++) {
+        network.Epoch(dataset.in, dataset.out);
+    }
 
     return 0;
 }

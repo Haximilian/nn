@@ -96,9 +96,6 @@ double cross_entropy(Vector predicted, Vector expected) {
     for (int i = 0; i < predicted.Size(); i++) {
         acc += expected.Get(i) * log(predicted.Get(i));
     }
-    if (isnan(acc)) {
-        predicted.Print();
-    }
 
     return acc;
 }
@@ -126,6 +123,13 @@ void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector
         activations.push_back(activation);
     }
 
+    for (int i = 5; i < 15; i++) {
+        std::cout << "prediction" << std::endl;
+        softmax(activations[i][0]).Print();
+        std::cout << "expected" << std::endl;
+        updated_out[i].Print();
+    }
+
     std::cout << "Epoch Loss: " << loss << std::endl;
 
     std::vector<Matrix> weights = dereference(this->weights);
@@ -135,8 +139,8 @@ void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector
         updated_out
     );
 
-    for (Matrix gradient: gradients) {
-        gradient.Print();
+    for (int i = 0; i < this->weights.size(); i++) {
+        *this->weights[i] = weights[i] - (gradients[i] * 0.2);
     }
 }
 

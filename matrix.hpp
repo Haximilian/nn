@@ -37,6 +37,8 @@ public:
     Matrix operator*(const Matrix &m);
     Matrix operator+(const Matrix &m);
     Matrix operator/(const double &d);
+    Matrix operator*(const double &d);
+    Matrix operator-(const Matrix &m);
     Matrix Transpose();
     double Get(int row, int column) const;
     void Set(int row, int column, double value);
