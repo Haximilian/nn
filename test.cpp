@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
         gradient.Print();
     }
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 200; i++) {
         network.Epoch(dataset.in, dataset.out);
     }
 

@@ -133,7 +133,8 @@ void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector
     //     updated_out[i].Print();
     // }
 
-    std::cout << "Epoch Loss: " << loss << std::endl;
+    // std::cout << "Epoch Loss: " << loss << std::endl;
+    std::cout << "Epoch Loss: " << loss / updated_in.size() << std::endl;
 
     std::vector<Matrix> weights = dereference(this->weights);
     std::vector<Matrix> gradients = Gradients(
@@ -263,24 +264,28 @@ std::vector<Matrix> Gradients(
     assert(activations.size() > 0);
 
     int size = activations.size();
+    int batch = 1;
+    int i = int((size - 1) * Random());
+
+    // std::cout << i << std::endl;
 
     std::vector<Matrix> gradients = Gradients(
         weights,
-        activations[0],
-        actual[0]
+        activations[i],
+        actual[i]
     );
 
-    for (int i = 1; i < size; i++) {
-        std::vector<Matrix> t = Gradients(
-            weights,
-            activations[i],
-            actual[i]
-        );
+    // for (int i = 1; i < size; i++) {
+    //     std::vector<Matrix> t = Gradients(
+    //         weights,
+    //         activations[i],
+    //         actual[i]
+    //     );
 
-        for (int j = 0; j < gradients.size(); j++) {
-            gradients[j] = gradients[j] + (t[j] / double(size));
-        }
-    }
+    //     for (int j = 0; j < gradients.size(); j++) {
+    //         gradients[j] = gradients[j] + (t[j] / double(size));
+    //     }
+    // }
 
     return gradients;
 }
