@@ -70,7 +70,13 @@ int main(int argc, char** argv) {
 
     out.Print();
 
-    for (int i = 0; i < 10; i++) {
+    auto weights = dereference(network.weights);
+    auto gradients = Gradients(weights, activations, out);
+    for(auto gradient: gradients) {
+        gradient.Print();
+    }
+
+    for (int i = 0; i < 100; i++) {
         network.Epoch(dataset.in, dataset.out);
     }
 

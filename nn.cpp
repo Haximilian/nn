@@ -76,9 +76,12 @@ std::vector<Vector> Network::Activations(Vector in) {
 
     activations[0] = Vector(in);
 
-    for (int i = 1; i < activations.size(); i++) {
+    for (int i = 1; i < activations.size() - 1; i++) {
         activations[i] = Vector((*this->weights[this->weights.size() - i] * activations[i - 1]).Apply(tanh));
     }
+
+    activations[activations.size() - 1] = *this->weights[0] * activations[activations.size() - 2];
+    activations[activations.size() - 1] = softmax(activations[activations.size() - 1]);
 
     std::reverse(activations.begin(), activations.end());
 
@@ -97,7 +100,7 @@ double cross_entropy(Vector predicted, Vector expected) {
         acc += expected.Get(i) * log(predicted.Get(i));
     }
 
-    return acc;
+    return -1 * acc;
 }
 
 void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector<double>> out) {
@@ -118,17 +121,17 @@ void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector
     for (int i = 0; i < updated_in.size(); i++) {
         Vector row = updated_in[i];
         std::vector<Vector> activation = this->Activations(row);
-        Vector predicted = softmax(activation[0]);
+        Vector predicted = activation[0];
         loss += cross_entropy(predicted, updated_out[i]);
         activations.push_back(activation);
     }
 
-    for (int i = 5; i < 15; i++) {
-        std::cout << "prediction" << std::endl;
-        softmax(activations[i][0]).Print();
-        std::cout << "expected" << std::endl;
-        updated_out[i].Print();
-    }
+    // for (int i = 5; i < 15; i++) {
+    //     std::cout << "prediction" << std::endl;
+    //     softmax(activations[i][0]).Print();
+    //     std::cout << "expected" << std::endl;
+    //     updated_out[i].Print();
+    // }
 
     std::cout << "Epoch Loss: " << loss << std::endl;
 
@@ -140,7 +143,9 @@ void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector
     );
 
     for (int i = 0; i < this->weights.size(); i++) {
-        *this->weights[i] = weights[i] - (gradients[i] * 0.2);
+        // (*this->weights[i]).Print();
+    //     gradients[i].Print();
+        *this->weights[i] = weights[i] - (gradients[i] * 0.03);
     }
 }
 
@@ -162,9 +167,10 @@ std::vector<Matrix> dereference(std::vector<Matrix*> in) {
 
 // returns vector of matrix
 // matrix dimensions
+// sigma theta / sigma a[i]
 // rows: dim(a_{0})
 // columns: dim(a_{i})
-std::vector<Matrix> SigmaJsigmaA(
+std::vector<Matrix> SigmaThetaSigmaA(
     std::vector<Matrix> weights,
     std::vector<Vector> activations
 )
@@ -172,8 +178,9 @@ std::vector<Matrix> SigmaJsigmaA(
     std::vector<Matrix> toReturn(activations.size());
 
     toReturn[0] = Identity(activations[0].Size());
+    toReturn[1] = weights[0];
 
-    for (int i = 1; i < activations.size(); i++) {
+    for (int i = 2; i < activations.size(); i++) {
         // current equals sigma a_{i - 1} / sigma a_{i}
         Matrix current = *Diag((weights[i - 1] * activations[i]).Apply(TanHPrime)) * weights[i - 1];
 
@@ -205,16 +212,20 @@ std::vector<Matrix> Gradients(
     Vector actual
 )
 {
-    std::vector<Matrix> sigmaJsigmaA = SigmaJsigmaA(weights, activations);
+    std::vector<Matrix> sigmaThetaSigmaA = SigmaThetaSigmaA(weights, activations);
 
     std::vector<Matrix> gradients(weights.size());
 
-    Vector predicted = softmax(activations[0]);
+    Vector predicted = activations[0];
 
-    Matrix sigmaCrossEntropySigmaPredicted = VectorToRowMatrix(actual - predicted);
+    Matrix sigmaCrossEntropySigmaPredicted = VectorToRowMatrix(predicted - actual);
+    // sigmaCrossEntropySigmaPredicted.Print();
 
     for (int i = 0; i < weights.size(); i++) {
         Matrix sigmaAsigmaZ = *Diag((weights[i] * activations[i + 1]).Apply(TanHPrime));
+        if (i == 0) {
+            sigmaAsigmaZ = Identity(weights[0].Rows());
+        }
 
         gradients[i] = Matrix(weights[i].Rows(), weights[i].Columns());
 
@@ -223,12 +234,16 @@ std::vector<Matrix> Gradients(
                 std::vector<double> t(activations[i].Size(), 0.0);
                 t[j] = activations[i + 1].Get(k);
                 Vector sigmaZsigmaW = Vector(t);
+                // sigmaAsigmaZ.Print();
+                // sigmaZsigmaW.Print();
 
                 Vector sigmaAsigmaW = sigmaAsigmaZ * sigmaZsigmaW;
 
-                Vector sigmaJsigmaW = sigmaJsigmaA[i] * sigmaAsigmaW;
+                Vector sigmaJsigmaW = sigmaThetaSigmaA[i] * sigmaAsigmaW;
+                // sigmaThetaSigmaA[i].Print();
 
                 double gradient = (sigmaCrossEntropySigmaPredicted * sigmaJsigmaW).Get(0);
+                // sigmaJsigmaW.Print();
 
                 gradients[i].Set(j, k, gradient);
             }
