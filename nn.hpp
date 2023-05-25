@@ -17,19 +17,21 @@ public:
     int Size() const;
 };
 
+typedef Vector activation_fn(Vector);
+typedef activation_fn* activation_fn_ptr;
+
 class Network
 {
 private:
     // std::vector<Matrix*> weights;
+    std::vector<activation_fn_ptr> activation_fns;
 
 public:
-    std::vector<Matrix*> weights;
+    std::vector<Matrix> weights;
 
     Network(NetworkMetadata metadata);
 
-    std::vector<Vector*> ForwardPropogation(Vector in);
-
-    std::vector<Vector> Activations(Vector in);
+    std::vector<Vector> ForwardPropagation(Vector in);
 
     void Epoch(std::vector<std::vector<double>> in, std::vector<std::vector<double>> out);
 
@@ -52,4 +54,4 @@ std::vector<Matrix> Gradients(
 
 std::vector<Matrix> dereference(std::vector<Matrix*> in);
 
-Vector softmax(Vector in);
+Vector Softmax(Vector in);

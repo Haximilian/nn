@@ -20,8 +20,9 @@ public:
     int Size() const;
     double Get(int i) const;
     void Print();
+    void AppendToBack(double d);
 
-private:
+// private:
     std::vector<double> vector;
 };
 
@@ -43,6 +44,7 @@ public:
     double Get(int row, int column) const;
     void Set(int row, int column, double value);
     void Print();
+    Matrix RemoveLastColumn();
 
 private:
     std::vector<std::vector<double>> matrix;

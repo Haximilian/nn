@@ -16,6 +16,10 @@ Vector::Vector(const Vector &v)
     this->vector = std::vector<double>(v.vector);
 }
 
+void Vector::AppendToBack(double d) {
+    this->vector.push_back(d);
+}
+
 Vector Vector::Apply(double (*f)(double))
 {
     Vector toReturn = Vector(*this);
@@ -190,6 +194,19 @@ Matrix Matrix::operator*(const double &d)
         for (int j = 0; j < this->Columns(); j++) {
             double left = this->Get(i, j);
             toReturn.Set(i, j, left * d);
+        }
+    }
+
+    return toReturn;
+}
+
+Matrix Matrix::RemoveLastColumn() {
+    Matrix toReturn = Matrix(this->Rows(), this->Columns() - 1);
+
+    for (int i = 0; i < toReturn.Rows(); i++) {
+        for (int j = 0; j < toReturn.Columns(); j++) {
+            double t = this->Get(i, j);
+            toReturn.Set(i, j, t);
         }
     }
 

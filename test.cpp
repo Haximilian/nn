@@ -6,44 +6,44 @@
 
 #include "der.cpp"
 
-#define SEED 1024
+#define SEED 1023
 
 int main(int argc, char** argv) {
     srand(SEED);
 
-    std::vector<std::vector<double>> a {
-        {1.0, 2.0},
-        {3.0, 4.0}
-    };
+    // std::vector<std::vector<double>> a {
+    //     {1.0, 2.0},
+    //     {3.0, 4.0}
+    // };
 
-    Matrix A(a);
+    // Matrix A(a);
 
-    A.Print();
+    // A.Print();
 
-    std::vector<std::vector<double>> b {
-        {5.0, 7.0, 9.0},
-        {6.0, 8.0, 10.0}
-    };
+    // std::vector<std::vector<double>> b {
+    //     {5.0, 7.0, 9.0},
+    //     {6.0, 8.0, 10.0}
+    // };
 
-    Matrix B(b);
+    // Matrix B(b);
 
-    B.Print();
+    // B.Print();
 
-    Matrix C = A * B;
+    // Matrix C = A * B;
 
-    C.Print();
+    // C.Print();
 
-    Matrix D = C.Transpose();
+    // Matrix D = C.Transpose();
 
-    D.Print();
+    // D.Print();
 
-    Matrix E = 0.5 * D;
+    // Matrix E = 0.5 * D;
 
-    E.Print();
+    // E.Print();
 
-    Matrix F = Identity(5);
+    // Matrix F = Identity(5);
 
-    F.Print();
+    // F.Print();
 
     NetworkMetadata metadata(std::vector<int>{2, 3, 2});
 
@@ -57,28 +57,37 @@ int main(int argc, char** argv) {
 
     in.Print();
 
-    std::cout << "activations" << std::endl;
-    std::vector<Vector> activations = network.Activations(in);
-
-    for (Vector activation: activations) {
-        activation.Print();
-    }
-
-    std::cout << "end" << std::endl;
-
     Vector out(dataset.out[0]);
 
     out.Print();
 
-    auto weights = dereference(network.weights);
+    std::vector<std::vector<double>> hidden {
+        {1.0, 1.0, 1.0, 1.0},
+        {1.0, 1.0, 1.0, 1.0},
+    };
+    network.weights[1] = hidden;
+    std::cout << "start weights" << std::endl;
+    for (int i = 0; i < weights.size(); i++) {
+        weights[i].Print();
+        network.weights[i] = &weights[i];
+    }
+    std::cout << "end weights" << std::endl;
+    std::vector<Vector> activations = network.Activations(in);
+    std::cout << "activations" << std::endl;
+    for (Vector activation: activations) {
+        activation.Print();
+    }
+    std::cout << "end" << std::endl;
     auto gradients = Gradients(weights, activations, out);
+    std::cout << "start gradients" << std::endl;
     for(auto gradient: gradients) {
         gradient.Print();
     }
+    std::cout << "end gradients" << std::endl;
 
-    for (int i = 0; i < 200; i++) {
-        network.Epoch(dataset.in, dataset.out);
-    }
+    // for (int i = 0; i < 200; i++) {
+    //     network.Epoch(dataset.in, dataset.out);
+    // }
 
     return 0;
 }

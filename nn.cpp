@@ -2,8 +2,8 @@
 
 #include "nn.hpp" 
 
-// currently only returns positive values
-double Random()
+// returns value in range (0, 1)
+double RandomBetweenZeroAndOne()
 {
     double t = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
 
@@ -14,6 +14,25 @@ double TanHPrime(double in) {
     double t = tanh(in);
 
     return (1.0 - t * t);
+}
+
+Vector TanH(Vector in) {
+    return Vector(in.Apply(tanh));
+}
+
+Vector Softmax(Vector in) {
+    std::vector<double> out(in.Size());
+
+    double sum = 0;
+    for (int i = 0; i < in.Size(); i++) {
+        sum += exp(in.Get(i));
+    }
+
+    for (int i = 0; i < in.Size(); i++) {
+        out[i] = exp(in.Get(i)) / sum;
+    }
+
+    return Vector(out);
 }
 
 NetworkMetadata::NetworkMetadata(std::vector<int> metadata) {
@@ -32,12 +51,15 @@ int NetworkMetadata::Size() const
     return this->metadata.size();
 }
 
+// todo: create a seperate method to initialize the activation functions
 Network::Network(NetworkMetadata metadata) {
-    std::vector<Matrix*> network(metadata.Size() - 1);
+    this->weights = std::vector<Matrix>(metadata.Size() - 1);
+    this->activation_fns = std::vector<activation_fn_ptr>(metadata.Size() - 1);
 
     for (int i = 1; i < metadata.Size(); i++) {
+        int bias = 1;
         int rows = metadata[i];
-        int columns = metadata[i - 1];
+        int columns = metadata[i - 1] + bias;
 
         std::vector<std::vector<double>> layer(rows);
 
@@ -45,45 +67,28 @@ Network::Network(NetworkMetadata metadata) {
             layer[j] = std::vector<double>(columns);
 
             for (int k = 0; k < columns; k++) {
-                layer[j][k] = Random();
+                layer[j][k] = RandomBetweenZeroAndOne() - 0.5;
             }
         }
 
-        network[i - 1] = new Matrix(layer);
+        this->weights[i - 1] = Matrix(layer);
+        this->activation_fns[i - 1] = *TanH;
     }
 
-    std::reverse(network.begin(), network.end());
-
-    this->weights = network;
+    this->activation_fns.back() = *Softmax;
 }
 
-std::vector<Vector*> Network::ForwardPropogation(Vector in) {
-    std::vector<Vector*> activations(this->weights.size() + 1);
-
-    activations[0] = new Vector(in);
-
-    for (int i = 1; i < activations.size(); i++) {
-        activations[i] = new Vector((*this->weights[this->weights.size() - i] * *activations[i - 1]).Apply(tanh));
-    }
-
-    std::reverse(activations.begin(), activations.end());
-
-    return activations;
-}
-
-std::vector<Vector> Network::Activations(Vector in) {
+std::vector<Vector> Network::ForwardPropagation(Vector in) {
     std::vector<Vector> activations(this->weights.size() + 1);
 
     activations[0] = Vector(in);
 
-    for (int i = 1; i < activations.size() - 1; i++) {
-        activations[i] = Vector((*this->weights[this->weights.size() - i] * activations[i - 1]).Apply(tanh));
+    for (int i = 1; i < activations.size(); i++) {
+        Vector t(activations[i - 1]);
+        t.AppendToBack(1.0);
+
+        activations[i] = this->activation_fns[i - 1](this->weights[i - 1] * t);
     }
-
-    activations[activations.size() - 1] = *this->weights[0] * activations[activations.size() - 2];
-    activations[activations.size() - 1] = softmax(activations[activations.size() - 1]);
-
-    std::reverse(activations.begin(), activations.end());
 
     return activations;
 }
@@ -118,13 +123,13 @@ void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector
 
     double loss = 0;
 
-    for (int i = 0; i < updated_in.size(); i++) {
-        Vector row = updated_in[i];
-        std::vector<Vector> activation = this->Activations(row);
-        Vector predicted = activation[0];
-        loss += cross_entropy(predicted, updated_out[i]);
-        activations.push_back(activation);
-    }
+    // for (int i = 0; i < updated_in.size(); i++) {
+    //     Vector row = updated_in[i];
+    //     std::vector<Vector> activation = this->Activations(row);
+    //     Vector predicted = activation[0];
+    //     loss += cross_entropy(predicted, updated_out[i]);
+    //     activations.push_back(activation);
+    // }
 
     // for (int i = 5; i < 15; i++) {
     //     std::cout << "prediction" << std::endl;
@@ -136,7 +141,7 @@ void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector
     // std::cout << "Epoch Loss: " << loss << std::endl;
     std::cout << "Epoch Loss: " << loss / updated_in.size() << std::endl;
 
-    std::vector<Matrix> weights = dereference(this->weights);
+    // std::vector<Matrix> weights = dereference(this->weights);
     std::vector<Matrix> gradients = Gradients(
         weights,
         activations,
@@ -145,16 +150,16 @@ void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector
 
     for (int i = 0; i < this->weights.size(); i++) {
         // (*this->weights[i]).Print();
-    //     gradients[i].Print();
-        *this->weights[i] = weights[i] - (gradients[i] * 0.03);
+        gradients[i].Print();
+        // *this->weights[i] = weights[i] - (gradients[i] * 0.03);
     }
 }
 
 void Network::Print() {
     std::cout << "---------- Network Print ----------" << std::endl;
 
-    for (Matrix* matrix: this->weights) {
-        matrix->Print();
+    for (Matrix matrix: this->weights) {
+        matrix.Print();
     }
 }
 
@@ -169,7 +174,7 @@ std::vector<Matrix> dereference(std::vector<Matrix*> in) {
 // returns vector of matrix
 // matrix dimensions
 // sigma theta / sigma a[i]
-// rows: dim(a_{0})
+// rows: dim(theta)
 // columns: dim(a_{i})
 std::vector<Matrix> SigmaThetaSigmaA(
     std::vector<Matrix> weights,
@@ -179,30 +184,19 @@ std::vector<Matrix> SigmaThetaSigmaA(
     std::vector<Matrix> toReturn(activations.size());
 
     toReturn[0] = Identity(activations[0].Size());
-    toReturn[1] = weights[0];
+    // remove column
+    toReturn[1] = weights[0].RemoveLastColumn();
 
     for (int i = 2; i < activations.size(); i++) {
+        Matrix weightWithoutBias = weights[i - 1].RemoveLastColumn(); 
         // current equals sigma a_{i - 1} / sigma a_{i}
-        Matrix current = *Diag((weights[i - 1] * activations[i]).Apply(TanHPrime)) * weights[i - 1];
+        Matrix current = *Diag((weights[i - 1] * activations[i]).Apply(TanHPrime)) * weightWithoutBias;
 
         toReturn[i] = toReturn[i - 1] * current;
     }
 
     return toReturn;
 }
-
-Vector softmax(Vector in) {
-    std::vector<double> out(in.Size());
-    double sum = 0;
-    for (int i = 0; i < out.size(); i++) {
-        sum += exp(in.Get(i));
-    }
-    for (int i = 0; i < in.Size(); i++) {
-        out[i] = exp(in.Get(i)) / sum;
-    }
-    return Vector(out);
-}
-
 
 // calculates the gradient for a given input
 // activation[0] equals (tanh(z) + 1) / 2
@@ -220,7 +214,7 @@ std::vector<Matrix> Gradients(
     Vector predicted = activations[0];
 
     Matrix sigmaCrossEntropySigmaPredicted = VectorToRowMatrix(predicted - actual);
-    // sigmaCrossEntropySigmaPredicted.Print();
+    sigmaCrossEntropySigmaPredicted.Print();
 
     for (int i = 0; i < weights.size(); i++) {
         Matrix sigmaAsigmaZ = *Diag((weights[i] * activations[i + 1]).Apply(TanHPrime));
@@ -232,7 +226,11 @@ std::vector<Matrix> Gradients(
 
         for (int j = 0; j < weights[i].Rows(); j++) {
             for (int k = 0; k < weights[i].Columns(); k++) {
-                std::vector<double> t(activations[i].Size(), 0.0);
+                int sigmaZsigmaWSize = activations[i].Size(); 
+                if (i > 0) {
+                    sigmaZsigmaWSize = activations[i].Size() - 1;
+                }
+                std::vector<double> t(sigmaZsigmaWSize, 0.0);
                 t[j] = activations[i + 1].Get(k);
                 Vector sigmaZsigmaW = Vector(t);
                 // sigmaAsigmaZ.Print();
@@ -247,6 +245,7 @@ std::vector<Matrix> Gradients(
                 // sigmaJsigmaW.Print();
 
                 gradients[i].Set(j, k, gradient);
+                // gradients[i].Print();
             }
         }
     }
@@ -265,7 +264,7 @@ std::vector<Matrix> Gradients(
 
     int size = activations.size();
     int batch = 1;
-    int i = int((size - 1) * Random());
+    int i = int((size - 1) * RandomBetweenZeroAndOne());
 
     // std::cout << i << std::endl;
 

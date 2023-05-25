@@ -1,2 +1,2 @@
 make:
-	g++ -std=c++11 test.cpp nn.cpp matrix.cpp -g
+	g++ -std=c++11 main.cpp nn.cpp matrix.cpp -g
