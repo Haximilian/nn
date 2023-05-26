@@ -52,7 +52,7 @@ private:
 
 Matrix operator*(const double c, const Matrix &A);
 
-Matrix* Diag(Vector v);
+Matrix Diag(Vector v);
 
 Matrix Identity(int size);
 

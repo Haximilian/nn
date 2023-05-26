@@ -289,7 +289,7 @@ Matrix operator*(const double c, const Matrix &A)
     return toReturn;
 }
 
-Matrix* Diag(Vector v) {
+Matrix Diag(Vector v) {
     std::vector<std::vector<double>> out(v.Size());
 
     for (int i = 0; i < v.Size(); i++) {
@@ -302,9 +302,7 @@ Matrix* Diag(Vector v) {
         out[i][i] = v[i];
     }
 
-    Matrix* toReturn = new Matrix(out);
-
-    return toReturn;
+    return Matrix(out);
 }
 
 Matrix Identity(int size) {

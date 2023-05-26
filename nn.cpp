@@ -93,8 +93,12 @@ std::vector<Vector> Network::ForwardPropagation(Vector in) {
     return activations;
 }
 
-Vector* Network::Residual(Vector* in, Vector* out) {
-    return new Vector(*in - *out);
+void Network::Print() {
+    std::cout << "---------- Network Print ----------" << std::endl;
+ 
+    for (Matrix matrix: this->weights) {
+        matrix.Print();
+    }
 }
 
 double cross_entropy(Vector predicted, Vector expected) {
@@ -108,183 +112,123 @@ double cross_entropy(Vector predicted, Vector expected) {
     return -1 * acc;
 }
 
-void Network::Epoch(std::vector<std::vector<double>> in, std::vector<std::vector<double>> out) {
-    std::vector<Vector> updated_in; 
-    for (auto row: in) {
-        updated_in.push_back(Vector(row));
+Matrix tanh_derivative(Vector activation) {
+    int rows = activation.Size();
+    int columns = activation.Size();
+
+    Matrix out(rows, columns);
+
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
+            double t;
+
+            if (i == j) {
+                t = 1 - activation[i] * activation[j];
+            } else {
+                t = 0;
+            }
+
+            out.Set(i, j, t);
+        }
     }
 
-    std::vector<Vector> updated_out; 
-    for (auto row: out) {
-        updated_out.push_back(Vector(row));
-    }
-
-    std::vector<std::vector<Vector>> activations;
-
-    double loss = 0;
-
-    // for (int i = 0; i < updated_in.size(); i++) {
-    //     Vector row = updated_in[i];
-    //     std::vector<Vector> activation = this->Activations(row);
-    //     Vector predicted = activation[0];
-    //     loss += cross_entropy(predicted, updated_out[i]);
-    //     activations.push_back(activation);
-    // }
-
-    // for (int i = 5; i < 15; i++) {
-    //     std::cout << "prediction" << std::endl;
-    //     softmax(activations[i][0]).Print();
-    //     std::cout << "expected" << std::endl;
-    //     updated_out[i].Print();
-    // }
-
-    // std::cout << "Epoch Loss: " << loss << std::endl;
-    std::cout << "Epoch Loss: " << loss / updated_in.size() << std::endl;
-
-    // std::vector<Matrix> weights = dereference(this->weights);
-    std::vector<Matrix> gradients = Gradients(
-        weights,
-        activations,
-        updated_out
-    );
-
-    for (int i = 0; i < this->weights.size(); i++) {
-        // (*this->weights[i]).Print();
-        gradients[i].Print();
-        // *this->weights[i] = weights[i] - (gradients[i] * 0.03);
-    }
+    return out;
 }
 
-void Network::Print() {
-    std::cout << "---------- Network Print ----------" << std::endl;
+Matrix softmax_derivative(Vector activation) {
+    int rows = activation.Size();
+    int columns = activation.Size();
 
-    for (Matrix matrix: this->weights) {
-        matrix.Print();
-    }
-}
+    Matrix out(rows, columns);
 
-std::vector<Matrix> dereference(std::vector<Matrix*> in) {
-    std::vector<Matrix> toReturn;
-    for (Matrix* m: in) {
-        toReturn.push_back(*m);
-    }
-    return toReturn;
-}
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
+            double t;
 
-// returns vector of matrix
-// matrix dimensions
-// sigma theta / sigma a[i]
-// rows: dim(theta)
-// columns: dim(a_{i})
-std::vector<Matrix> SigmaThetaSigmaA(
-    std::vector<Matrix> weights,
-    std::vector<Vector> activations
-)
-{
-    std::vector<Matrix> toReturn(activations.size());
+            if (i == j) {
+                t = activation[i] * (1 - activation[j]);
+            } else {
+                t = activation[i] * (0 - activation[j]);
+            }
 
-    toReturn[0] = Identity(activations[0].Size());
-    // remove column
-    toReturn[1] = weights[0].RemoveLastColumn();
-
-    for (int i = 2; i < activations.size(); i++) {
-        Matrix weightWithoutBias = weights[i - 1].RemoveLastColumn(); 
-        // current equals sigma a_{i - 1} / sigma a_{i}
-        Matrix current = *Diag((weights[i - 1] * activations[i]).Apply(TanHPrime)) * weightWithoutBias;
-
-        toReturn[i] = toReturn[i - 1] * current;
+            out.Set(i, j, t);
+        }
     }
 
-    return toReturn;
+    return out;
 }
 
-// calculates the gradient for a given input
-// activation[0] equals (tanh(z) + 1) / 2
-// it's also the output of the neural network
 std::vector<Matrix> Gradients(
     std::vector<Matrix> weights,
     std::vector<Vector> activations,
     Vector actual
-)
-{
-    std::vector<Matrix> sigmaThetaSigmaA = SigmaThetaSigmaA(weights, activations);
+) {
+    // reverse activations
+    // reverse weights
 
-    std::vector<Matrix> gradients(weights.size());
-
-    Vector predicted = activations[0];
-
-    Matrix sigmaCrossEntropySigmaPredicted = VectorToRowMatrix(predicted - actual);
-    sigmaCrossEntropySigmaPredicted.Print();
-
-    for (int i = 0; i < weights.size(); i++) {
-        Matrix sigmaAsigmaZ = *Diag((weights[i] * activations[i + 1]).Apply(TanHPrime));
-        if (i == 0) {
-            sigmaAsigmaZ = Identity(weights[0].Rows());
-        }
-
-        gradients[i] = Matrix(weights[i].Rows(), weights[i].Columns());
-
-        for (int j = 0; j < weights[i].Rows(); j++) {
-            for (int k = 0; k < weights[i].Columns(); k++) {
-                int sigmaZsigmaWSize = activations[i].Size(); 
-                if (i > 0) {
-                    sigmaZsigmaWSize = activations[i].Size() - 1;
-                }
-                std::vector<double> t(sigmaZsigmaWSize, 0.0);
-                t[j] = activations[i + 1].Get(k);
-                Vector sigmaZsigmaW = Vector(t);
-                // sigmaAsigmaZ.Print();
-                // sigmaZsigmaW.Print();
-
-                Vector sigmaAsigmaW = sigmaAsigmaZ * sigmaZsigmaW;
-
-                Vector sigmaJsigmaW = sigmaThetaSigmaA[i] * sigmaAsigmaW;
-                // sigmaThetaSigmaA[i].Print();
-
-                double gradient = (sigmaCrossEntropySigmaPredicted * sigmaJsigmaW).Get(0);
-                // sigmaJsigmaW.Print();
-
-                gradients[i].Set(j, k, gradient);
-                // gradients[i].Print();
-            }
-        }
-    }
-
-    return gradients;
-}
-
-std::vector<Matrix> Gradients(
-    std::vector<Matrix> weights,
-    std::vector<std::vector<Vector>> activations,
-    std::vector<Vector> actual
-) 
-{
-    assert(activations.size() == actual.size());
-    assert(activations.size() > 0);
-
-    int size = activations.size();
-    int batch = 1;
-    int i = int((size - 1) * RandomBetweenZeroAndOne());
-
-    // std::cout << i << std::endl;
-
-    std::vector<Matrix> gradients = Gradients(
-        weights,
-        activations[i],
-        actual[i]
+    std::vector<Matrix> activation_derivative(
+        activations.size()
+    );
+    std::vector<Matrix> cumulative_derivative(
+        activations.size()
     );
 
-    // for (int i = 1; i < size; i++) {
-    //     std::vector<Matrix> t = Gradients(
-    //         weights,
-    //         activations[i],
-    //         actual[i]
-    //     );
+    activation_derivative[0] = Identity(activations[0].Size());
 
-    //     for (int j = 0; j < gradients.size(); j++) {
-    //         gradients[j] = gradients[j] + (t[j] / double(size));
-    //     }
+    int i = 1;
+    for (; i < activations.size() - 1; i++) {
+        activation_derivative[i] = tanh_derivative(activations[i]);
+    }
+    activation_derivative[i] = softmax_derivative(activations[i]);
+
+    Matrix ha(1, actual.Size());
+    for (int j = 0; j < actual.Size(); j++) {
+        double t = -1 * actual.Get(j) / activations.back().Get(j);
+        ha.Set(0, j, t);
+    }
+
+    cumulative_derivative[i] = ha * activation_derivative[i];
+    
+    for (; i > 0;) {
+        i--;
+        cumulative_derivative[i] = cumulative_derivative[i + 1] * weights[i].RemoveLastColumn() * activation_derivative[i];
+    }
+
+    // std::cout << "begin activation_derivative" << std::endl;
+    // for (auto a:activation_derivative) {
+    //     a.Print();
+    // }
+    // std::cout << "end activation_derivative" << std::endl;
+    
+    // std::cout << "begin cumulative_derivative" << std::endl;
+    // for (auto c:cumulative_derivative) {
+    //     c.Print();
+    // }
+    // std::cout << "end cumulative_derivative" << std::endl;
+    
+    std::vector<Matrix> network_derivative(weights.size());
+    for (int i = 0; i < weights.size(); i++) {
+        int rows = weights[i].Rows();
+        int columns = weights[i].Columns();
+        Matrix weight_derivative(rows, columns);
+
+        for (int j = 0; j < rows; j++) {
+            for (int k = 0; k < columns; k++) {
+                std::vector<double> t(weights[i].Rows(), 0.0);
+
+                t[j] = k >= activations[i].Size() ? 1 : activations[i].Get(k);
+                Vector zw(t);
+                double hw = (cumulative_derivative[i + 1] * zw).Get(0);
+                weight_derivative.Set(j, k, hw);
+            }
+        }
+
+        network_derivative[i] = weight_derivative;
+    }
+
+    // for (auto n:network_derivative) {
+    //     n.Print();
     // }
 
-    return gradients;
+    return network_derivative;
 }
