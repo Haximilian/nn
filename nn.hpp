@@ -55,3 +55,6 @@ std::vector<Matrix> Gradients(
 std::vector<Matrix> dereference(std::vector<Matrix*> in);
 
 Vector Softmax(Vector in);
+
+double cross_entropy(Vector predicted, Vector expected);
+

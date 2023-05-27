@@ -6,55 +6,43 @@
 
 #define SEED 1024
 
+double cross_entropy_dataset(Dataset d, Network n) {
+    double r = 0;
+    for (int i = 0; i < d.in.size(); i++) {
+        Vector predicted = n.ForwardPropagation(d.in[i]).back();
+        r = r + cross_entropy(predicted, d.out[i]);
+    }
+    return r;
+}
+
 int main(int argc, char** argv) {
     srand(SEED);
 
-    // std::vector<std::vector<double>> a {
-    //     {1.0, -2.0, 0.0},
-    //     {-3.0, 4.0, 0.2},
-    //     {5.0, -6.0, 0.8}
-    // };
-
-    // Matrix A(a);
-
-    // std::vector<std::vector<double>> b {
-    //     {0.5, 1.0/3.0, 1.0, 0.3},
-    //     {1.0, 0.25, 0.5, -0.7},
-    // };
-
-    // Matrix B(b);
-
-    NetworkMetadata metadata(std::vector<int>{2, 3, 2});
+    NetworkMetadata metadata(std::vector<int>{2, 8, 8, 2});
 
     Network network(metadata);
 
-    // network.weights[0] = A;
-    // network.weights[1] = B;
-
     network.Print();
 
-    std::vector<double> t_in {
-        3.0,
-        4.0
-    };
-    Vector in(t_in);
-    in.Print();
+    Dataset dataset("./train.csv");
 
-    std::vector<double> t_out {
-        1,
-        0
-    };
-    Vector out(t_out);
-    out.Print();
-
-    for (int j = 0; j < 16; j++)
+    for (int k = 0; k < 64*512; k++)
     {
+        int j = k % 512;
+        Vector in(dataset.in[j]);
+
+        // in.Print();
+
+        Vector out(dataset.out[j]);
+
+        // out.Print();
+
         std::vector<Vector> activations = network.ForwardPropagation(in);
         // for (auto activation : activations)
         // {
         //     activation.Print();
         // }
-        activations.back().Print();
+        // activations.back().Print();
 
         std::vector<Matrix> gradients = Gradients(
             network.weights,
@@ -65,5 +53,35 @@ int main(int argc, char** argv) {
         {
             network.weights[i] = network.weights[i] - 0.03 * gradients[i];
         }
+
+        // if (j % 128 == 0) {
+        //     // std::cout << "dataset cross entropy" << std::endl;
+        //     std::cout << cross_entropy_dataset(dataset, network) << "," << std::endl;
+        // }
     }
+
+    // for (int i = 1024; i < 1024 + 16; i++)
+    // {
+    //     Vector in(dataset.in[i]);
+    //     in.Print();
+
+    //     Vector out(dataset.out[i]);
+
+    //     out.Print();
+
+    //     std::vector<Vector> activations = network.ForwardPropagation(in);
+    //     activations.back().Print();
+    // }
+    
+    for (double i = -8; i <= 8; i = i + 0.5) {
+        for (double j = -8; j <= 8; j = j + 0.5) {
+            std::vector<double> in {
+                i, j
+            };
+            double out = network.ForwardPropagation(in).back().Get(0);
+            std::cout << i << "," << j << "," << out << std::endl;
+        }
+    }
+
+    network.Print();
 }
