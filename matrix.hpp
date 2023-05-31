@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <stdio.h>
+#include <cassert>
 
 class Matrix;
 
@@ -47,7 +48,9 @@ public:
     Matrix RemoveLastColumn();
 
 private:
-    std::vector<std::vector<double>> matrix;
+    int rows;
+    int columns;
+    std::vector<double> matrix;
 };
 
 Matrix operator*(const double c, const Matrix &A);
