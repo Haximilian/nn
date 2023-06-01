@@ -15,7 +15,6 @@ public:
     Vector(std::vector<double> v);
     Vector(const Vector &v);
     Vector Apply(double (*f)(double));
-    Matrix operator*(const Matrix &m);
     double operator[](const int index) const;
     Vector operator-(const Vector r) const;
     int Size() const;
@@ -23,7 +22,7 @@ public:
     void Print();
     void AppendToBack(double d);
 
-// private:
+private:
     std::vector<double> vector;
 };
 
@@ -58,9 +57,3 @@ Matrix operator*(const double c, const Matrix &A);
 Matrix Diag(Vector v);
 
 Matrix Identity(int size);
-
-Matrix VectorToRowMatrix(Vector v);
-
-Matrix VectorToColumnMatrix(Vector v);
-
-Vector VectorOfAllOnes(int size);

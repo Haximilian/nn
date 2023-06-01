@@ -43,13 +43,6 @@ double Vector::Get(int i) const
     return this->vector[i];
 }
 
-Matrix Vector::operator*(const Matrix &m)
-{
-    Matrix a = VectorToColumnMatrix(*this);
-
-    return a * m;
-}
-
 double Vector::operator[](const int index) const
 {
 #ifdef DYNAMIC_ASSERT
@@ -385,51 +378,6 @@ Matrix Identity(int size)
     }
 
     Matrix toReturn(out);
-
-    return toReturn;
-}
-
-Matrix VectorToRowMatrix(Vector v)
-{
-    std::vector<std::vector<double>> out(1);
-    std::vector<double> in(v.Size());
-    for (int i = 0; i < v.Size(); i++)
-    {
-        in[i] = v[i];
-    }
-
-    out[0] = in;
-
-    Matrix toReturn(out);
-
-    return toReturn;
-}
-
-Matrix VectorToColumnMatrix(Vector v)
-{
-    std::vector<std::vector<double>> row(1);
-    std::vector<double> column(v.Size());
-
-    for (int i = 0; i < v.Size(); i++)
-    {
-        column[i] = v[i];
-    }
-
-    row[0] = column;
-
-    return Matrix(row);
-}
-
-Vector VectorOfAllOnes(int size)
-{
-    std::vector<double> t(size);
-
-    for (int i = 0; i < size; i++)
-    {
-        t[i] = 1;
-    }
-
-    Vector toReturn(t);
 
     return toReturn;
 }
