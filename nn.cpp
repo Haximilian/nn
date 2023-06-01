@@ -97,8 +97,7 @@ double cross_entropy(Vector predicted, Vector expected)
     return -1 * acc;
 }
 
-std::vector<Matrix> Gradients(
-    std::vector<Matrix> weights,
+std::vector<Matrix> Network::CalculateGradient(
     std::vector<Vector> activations,
     Vector actual)
 {
@@ -131,18 +130,6 @@ std::vector<Matrix> Gradients(
         cumulative_derivative[i] = cumulative_derivative[i + 1] * weights[i].RemoveLastColumn() * activation_derivative[i];
     }
 
-    // std::cout << "begin activation_derivative" << std::endl;
-    // for (auto a:activation_derivative) {
-    //     a.Print();
-    // }
-    // std::cout << "end activation_derivative" << std::endl;
-
-    // std::cout << "begin cumulative_derivative" << std::endl;
-    // for (auto c:cumulative_derivative) {
-    //     c.Print();
-    // }
-    // std::cout << "end cumulative_derivative" << std::endl;
-
     std::vector<Matrix> network_derivative(weights.size());
     for (int i = 0; i < weights.size(); i++)
     {
@@ -165,10 +152,6 @@ std::vector<Matrix> Gradients(
 
         network_derivative[i] = weight_derivative;
     }
-
-    // for (auto n:network_derivative) {
-    //     n.Print();
-    // }
 
     return network_derivative;
 }

@@ -33,18 +33,9 @@ public:
 
     std::vector<Vector> ForwardPropagation(Vector in);
 
-    // void Epoch(std::vector<std::vector<double>> in, std::vector<std::vector<double>> out);
-
-    // Vector* Residual(Vector* in, Vector* out);
+    std::vector<Matrix> CalculateGradient(std::vector<Vector> activations, Vector actual);
 
     void Print();
 };
 
-std::vector<Matrix> Gradients(
-    std::vector<Matrix> weights,
-    std::vector<Vector> activations,
-    Vector actual
-);
-
 double cross_entropy(Vector predicted, Vector expected);
-

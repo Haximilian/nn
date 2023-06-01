@@ -44,8 +44,7 @@ int main(int argc, char** argv) {
         // }
         // activations.back().Print();
 
-        std::vector<Matrix> gradients = Gradients(
-            network.weights,
+        std::vector<Matrix> gradients = network.CalculateGradient(
             activations,
             out);
 
