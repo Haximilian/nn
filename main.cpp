@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 
     Network network(metadata);
 
-    network.Print();
+    // network.Print();
 
     Dataset dataset("./train.csv");
 
@@ -73,15 +73,15 @@ int main(int argc, char** argv) {
     //     activations.back().Print();
     // }
     
-    for (double i = -8; i <= 8; i = i + 0.5) {
-        for (double j = -8; j <= 8; j = j + 0.5) {
-            std::vector<double> in {
-                i, j
-            };
-            double out = network.ForwardPropagation(in).back().Get(0);
-            std::cout << i << "," << j << "," << out << std::endl;
-        }
-    }
+    // for (double i = -8; i <= 8; i = i + 0.5) {
+    //     for (double j = -8; j <= 8; j = j + 0.5) {
+    //         std::vector<double> in {
+    //             i, j
+    //         };
+    //         double out = network.ForwardPropagation(in).back().Get(0);
+    //         std::cout << i << "," << j << "," << out << std::endl;
+    //     }
+    // }
 
-    network.Print();
+    // network.Print();
 }

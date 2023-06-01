@@ -46,15 +46,5 @@ std::vector<Matrix> Gradients(
     Vector actual
 );
 
-// std::vector<Matrix> Gradients(
-//     std::vector<Matrix> weights,
-//     std::vector<std::vector<Vector>> activations,
-//     std::vector<Vector> actual
-// ); 
-
-std::vector<Matrix> dereference(std::vector<Matrix*> in);
-
-Vector Softmax(Vector in);
-
 double cross_entropy(Vector predicted, Vector expected);
 

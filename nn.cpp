@@ -1,6 +1,5 @@
-#include <math.h>
-
 #include "nn.hpp" 
+#include "der.hpp"
 
 // returns value in range (0, 1)
 double RandomBetweenZeroAndOne()
@@ -8,31 +7,6 @@ double RandomBetweenZeroAndOne()
     double t = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
 
     return t;
-}
-
-double TanHPrime(double in) {
-    double t = tanh(in);
-
-    return (1.0 - t * t);
-}
-
-Vector TanH(Vector in) {
-    return Vector(in.Apply(tanh));
-}
-
-Vector Softmax(Vector in) {
-    std::vector<double> out(in.Size());
-
-    double sum = 0;
-    for (int i = 0; i < in.Size(); i++) {
-        sum += exp(in.Get(i));
-    }
-
-    for (int i = 0; i < in.Size(); i++) {
-        out[i] = exp(in.Get(i)) / sum;
-    }
-
-    return Vector(out);
 }
 
 NetworkMetadata::NetworkMetadata(std::vector<int> metadata) {
@@ -72,10 +46,10 @@ Network::Network(NetworkMetadata metadata) {
         }
 
         this->weights[i - 1] = Matrix(layer);
-        this->activation_fns[i - 1] = *TanH;
+        this->activation_fns[i - 1] = *tanh_vector;
     }
 
-    this->activation_fns.back() = *Softmax;
+    this->activation_fns.back() = *softmax_vector;
 }
 
 std::vector<Vector> Network::ForwardPropagation(Vector in) {
@@ -110,52 +84,6 @@ double cross_entropy(Vector predicted, Vector expected) {
     }
 
     return -1 * acc;
-}
-
-Matrix tanh_derivative(Vector activation) {
-    int rows = activation.Size();
-    int columns = activation.Size();
-
-    Matrix out(rows, columns);
-
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            double t;
-
-            if (i == j) {
-                t = 1 - activation[i] * activation[j];
-            } else {
-                t = 0;
-            }
-
-            out.Set(i, j, t);
-        }
-    }
-
-    return out;
-}
-
-Matrix softmax_derivative(Vector activation) {
-    int rows = activation.Size();
-    int columns = activation.Size();
-
-    Matrix out(rows, columns);
-
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            double t;
-
-            if (i == j) {
-                t = activation[i] * (1 - activation[j]);
-            } else {
-                t = activation[i] * (0 - activation[j]);
-            }
-
-            out.Set(i, j, t);
-        }
-    }
-
-    return out;
 }
 
 std::vector<Matrix> Gradients(
