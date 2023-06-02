@@ -1,10 +1,13 @@
 #include <vector>
+#include <array>
 
 #include "matrix.hpp"
 #include "nn.hpp"
 #include "dataset.hpp"
 
 #define SEED 1024
+#define BATCH_SIZE 512
+#define EPOCH_COUNT 64
 
 double cross_entropy_dataset(Dataset d, Network n) {
     double r = 0;
@@ -22,13 +25,10 @@ int main(int argc, char** argv) {
 
     Network network(metadata);
 
-    // network.Print();
-
     Dataset dataset("./train.csv");
 
-    for (int k = 0; k < 64*512; k++)
-    {
-        int j = k % 512;
+    for (int k = 0; k < EPOCH_COUNT * BATCH_SIZE; k++) {
+        int j = k % BATCH_SIZE;
         Vector in(dataset.in[j]);
 
         // in.Print();
