@@ -36,7 +36,6 @@ public:
     int Columns() const;
     Vector operator*(const Vector &v);
     Matrix operator*(const Matrix &m);
-    Matrix operator+(const Matrix &m);
     Matrix operator/(const double &d);
     Matrix operator*(const double &d);
     Matrix operator-(const Matrix &m);
