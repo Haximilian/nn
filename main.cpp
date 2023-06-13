@@ -50,13 +50,13 @@ int main(int argc, char** argv) {
 
         for (int i = 0; i < gradients.size(); i++)
         {
-            network.weights[i] = network.weights[i] - 0.03 * gradients[i];
+            network.weights[i] = network.weights[i] - gradients[i] * 0.03;
         }
 
-        // if (j % 128 == 0) {
-        //     // std::cout << "dataset cross entropy" << std::endl;
-        //     std::cout << cross_entropy_dataset(dataset, network) << "," << std::endl;
-        // }
+        if (j % 128 == 0) {
+            // std::cout << "dataset cross entropy" << std::endl;
+            std::cout << cross_entropy_dataset(dataset, network) << "," << std::endl;
+        }
     }
 
     // for (int i = 1024; i < 1024 + 16; i++)
