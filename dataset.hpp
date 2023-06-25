@@ -3,11 +3,12 @@
 #include "include/rapidcsv.h"
 #include "matrix.hpp"
 
+template<typename T>
 class Dataset
 {
 public:
-    std::vector<std::vector<double>> in;
-    std::vector<std::vector<double>> out;
+    std::vector<std::vector<T>> in;
+    std::vector<std::vector<T>> out;
 
     Dataset(std::string filename)
     {
@@ -15,20 +16,20 @@ public:
 
         for (size_t i = 0; i < document.GetRowCount(); i++)
         {
-            std::vector<double> t = document.GetRow<double>(i);
+            std::vector<T> t = document.GetRow<T>(i);
 
-            std::vector<double> arg{
+            std::vector<T> arg{
                 t[0], t[1]};
             in.push_back(arg);
 
             if (t[2] > 0.5) {
-                std::vector<double> res
+                std::vector<T> res
                 {
                     1, 0
                 };
                 out.push_back(res);
             } else {
-                std::vector<double> res
+                std::vector<T> res
                 {
                     0, 1
                 };

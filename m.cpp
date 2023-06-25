@@ -1,3 +1,5 @@
+#pragma once
+
 #include "m.hpp"
 
 template<typename T, size_t R, size_t C>
@@ -7,11 +9,11 @@ matrix<T, R, C>::matrix() {
 
 template<typename T, size_t R, size_t C>
 matrix<T, R, C>::matrix(T (*f)()) {
-    matrix<R, C>();
+    matrix<T, R, C>();
 
     for (size_t i = 0; i < R; i++)
     {
-        double t = 0;
+        T t = 0;
 
         for (int j = 0; j < C; j++)
         {
@@ -21,7 +23,22 @@ matrix<T, R, C>::matrix(T (*f)()) {
 }
 
 template<typename T, size_t R, size_t C>
-double matrix<T, R, C>::get(size_t i, size_t j) const {
+matrix<T, R, C>::matrix(std::array<T, R * C> arr, T(*f)()) {
+    this->arr = arr;
+
+    for (size_t i = 0; i < R; i++)
+    {
+        T t = 0;
+
+        for (int j = 0; j < C; j++)
+        {
+            this->set(i, j, f());
+        }
+    }
+}
+
+template<typename T, size_t R, size_t C>
+T matrix<T, R, C>::get(size_t i, size_t j) const {
     return this->arr[C * i + j];
 }
 
@@ -32,11 +49,11 @@ void matrix<T, R, C>::set(size_t i, size_t j, T v) {
 
 template<typename T, size_t R, size_t C>
 std::array<T, R> matrix<T, R, C>::operator*(const std::array<T, C> arr) const {
-    std::array<double, R> out{};
+    std::array<T, R> out{};
 
     for (size_t i = 0; i < R; i++)
     {
-        double t = 0;
+        T t = 0;
 
         for (int j = 0; j < C; j++)
         {
@@ -50,15 +67,34 @@ std::array<T, R> matrix<T, R, C>::operator*(const std::array<T, C> arr) const {
 }
 
 template<typename T, size_t R, size_t C>
+std::vector<T> matrix<T, R, C>::operator*(const std::vector<T>) const {
+    std::vector<T> out(R);
+
+    for (size_t i = 0; i < R; i++)
+    {
+        T t = 0;
+
+        for (int j = 0; j < C; j++)
+        {
+            t += this->get(i, j) * arr[j];
+        }
+
+        out[i] = t;
+    }
+
+    return out;
+};
+
+template<typename T, size_t R, size_t C>
 template<size_t U, size_t V>
 matrix<T, R, V> matrix<T, R, C>::operator*(const matrix<T, U, V> in) const {
-    matrix<T, R, V> out();
+    matrix<T, R, V> out{};
 
     for (int i = 0; i < R; i++)
     {
         for (int j = 0; j < V; j++)
         {
-            double t = 0;
+            T t = 0;
 
             for (int k = 0; k < C; k++)
             {
@@ -74,7 +110,7 @@ matrix<T, R, V> matrix<T, R, C>::operator*(const matrix<T, U, V> in) const {
 
 template<typename T, size_t R, size_t C>
 matrix<T, R, C> matrix<T, R, C>::operator-(const matrix<T, R, C> in) const {
-    matrix<T, R, C> out();
+    matrix<T, R, C> out{};
 
     for (int i = 0; i < R; i++)
     {
@@ -91,7 +127,7 @@ matrix<T, R, C> matrix<T, R, C>::operator-(const matrix<T, R, C> in) const {
 
 template<typename T, size_t R, size_t C>
 matrix<T, R, C> matrix<T, R, C>::operator*(const T sc) const {
-    matrix<T, R, C> out();
+    matrix<T, R, C> out{};
 
     for (int i = 0; i < R; i++)
     {
@@ -108,7 +144,7 @@ matrix<T, R, C> matrix<T, R, C>::operator*(const T sc) const {
 
 template<typename T, size_t R, size_t C>
 matrix<T, R, C> matrix<T, R, C>::operator/(const T sc) const {
-    matrix<T, R, C> out();
+    matrix<T, R, C> out{};
 
     for (int i = 0; i < R; i++)
     {
@@ -125,7 +161,7 @@ matrix<T, R, C> matrix<T, R, C>::operator/(const T sc) const {
 
 template<typename T, size_t R, size_t C>
 matrix<T, R, C> matrix<T, R, C>::remove_last_column() const {
-   matrix<T, R, C - 1> out();
+   matrix<T, R, C - 1> out{};
 
     for (int i = 0; i < R; i++)
     {

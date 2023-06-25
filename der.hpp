@@ -2,23 +2,23 @@
 
 #include "matrix.hpp"
 
-Vector tanh_vector(Vector in)
+Vector<float> tanh_vector(Vector<float> in)
 {
     return in.Apply(tanh);
 }
 
-Matrix tanh_derivative(Vector activation)
+Matrix<float> tanh_derivative(Vector<float> activation)
 {
     int rows = activation.Size();
     int columns = activation.Size();
 
-    Matrix out(rows, columns);
+    Matrix<float> out(rows, columns);
 
     for (int i = 0; i < rows; i++)
     {
         for (int j = 0; j < columns; j++)
         {
-            double t;
+            float t;
 
             if (i == j)
             {
@@ -36,11 +36,12 @@ Matrix tanh_derivative(Vector activation)
     return out;
 }
 
-Vector softmax_vector(Vector in)
+template<typename T>
+Vector<T> softmax_vector(Vector<T> in)
 {
-    std::vector<double> out(in.Size());
+    std::vector<float> out(in.Size());
 
-    double sum = 0;
+    float sum = 0;
     for (int i = 0; i < in.Size(); i++)
     {
         sum += exp(in.Get(i));
@@ -51,21 +52,22 @@ Vector softmax_vector(Vector in)
         out[i] = exp(in.Get(i)) / sum;
     }
 
-    return Vector(out);
+    return Vector<T>(out);
 }
 
-Matrix softmax_derivative(Vector activation)
+template<typename T>
+Matrix<T> softmax_derivative(Vector<T> activation)
 {
     int rows = activation.Size();
     int columns = activation.Size();
 
-    Matrix out(rows, columns);
+    Matrix<T> out(rows, columns);
 
     for (int i = 0; i < rows; i++)
     {
         for (int j = 0; j < columns; j++)
         {
-            double t;
+            float t;
 
             if (i == j)
             {

@@ -9,10 +9,10 @@
 #define BATCH_SIZE 512
 #define EPOCH_COUNT 64
 
-double cross_entropy_dataset(Dataset d, Network n) {
-    double r = 0;
+float cross_entropy_dataset(Dataset<float> d, Network<float> n) {
+    float r = 0;
     for (int i = 0; i < d.in.size(); i++) {
-        Vector predicted = n.ForwardPropagation(d.in[i]).back();
+        Vector<float> predicted = n.ForwardPropagation(d.in[i]).back();
         r = r + cross_entropy(predicted, d.out[i]);
     }
     return r;
@@ -23,28 +23,28 @@ int main(int argc, char** argv) {
 
     NetworkMetadata metadata(std::vector<int>{2, 8, 8, 2});
 
-    Network network(metadata);
+    Network<float> network(metadata);
 
-    Dataset dataset("./train.csv");
+    Dataset<float> dataset("./train.csv");
 
     for (int k = 0; k < EPOCH_COUNT * BATCH_SIZE; k++) {
         int j = k % BATCH_SIZE;
-        Vector in(dataset.in[j]);
+        Vector<float> in(dataset.in[j]);
 
         // in.Print();
 
-        Vector out(dataset.out[j]);
+        Vector<float> out(dataset.out[j]);
 
         // out.Print();
 
-        std::vector<Vector> activations = network.ForwardPropagation(in);
+        std::vector<Vector<float>> activations = network.ForwardPropagation(in);
         // for (auto activation : activations)
         // {
         //     activation.Print();
         // }
         // activations.back().Print();
 
-        std::vector<Matrix> gradients = network.CalculateGradient(
+        std::vector<Matrix<float>> gradients = network.CalculateGradient(
             activations,
             out);
 

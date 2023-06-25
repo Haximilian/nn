@@ -1,10 +1,12 @@
 #include "nn.hpp"
 #include "der.hpp"
 
+// #include "m.cpp"
+
 // returns value in range (0, 1)
-double RandomBetweenZeroAndOne()
+float RandomBetweenZeroAndOne()
 {
-    double t = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
+    float t = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 
     return t;
 }
@@ -27,9 +29,10 @@ int NetworkMetadata::Size() const
 }
 
 // todo: create a seperate method to initialize the activation functions
-Network::Network(NetworkMetadata metadata)
+template<typename T>
+Network<T>::Network(NetworkMetadata metadata)
 {
-    this->weights = std::vector<Matrix>(metadata.Size() - 1);
+    this->weights = std::vector<Matrix<T>>(metadata.Size() - 1);
     this->activation_fns = std::vector<activation_fn_ptr>(metadata.Size() - 1);
 
     for (int i = 1; i < metadata.Size(); i++)
@@ -38,11 +41,11 @@ Network::Network(NetworkMetadata metadata)
         int rows = metadata[i];
         int columns = metadata[i - 1] + bias;
 
-        std::vector<std::vector<double>> layer(rows);
+        std::vector<std::vector<float>> layer(rows);
 
         for (int j = 0; j < rows; j++)
         {
-            layer[j] = std::vector<double>(columns);
+            layer[j] = std::vector<float>(columns);
 
             for (int k = 0; k < columns; k++)
             {
@@ -50,22 +53,23 @@ Network::Network(NetworkMetadata metadata)
             }
         }
 
-        this->weights[i - 1] = Matrix(layer);
+        this->weights[i - 1] = Matrix<T>(layer);
         this->activation_fns[i - 1] = *tanh_vector;
     }
 
-    this->activation_fns.back() = *softmax_vector;
+    this->activation_fns.back() = *softmax_vector<float>;
 }
 
-std::vector<Vector> Network::ForwardPropagation(Vector in)
+template<typename T>
+std::vector<Vector<T>> Network<T>::ForwardPropagation(Vector<T> in)
 {
-    std::vector<Vector> activations(this->weights.size() + 1);
+    std::vector<Vector<T>> activations(this->weights.size() + 1);
 
-    activations[0] = Vector(in);
+    activations[0] = Vector<T>(in);
 
     for (int i = 1; i < activations.size(); i++)
     {
-        Vector t(activations[i - 1]);
+        Vector<T> t(activations[i - 1]);
         t.AppendToBack(1.0);
 
         activations[i] = this->activation_fns[i - 1](this->weights[i - 1] * t);
@@ -74,21 +78,22 @@ std::vector<Vector> Network::ForwardPropagation(Vector in)
     return activations;
 }
 
-void Network::Print()
+template<typename T>
+void Network<T>::Print()
 {
     std::cout << "---------- Network Print ----------" << std::endl;
 
-    for (Matrix matrix : this->weights)
+    for (Matrix<T> matrix : this->weights)
     {
         matrix.Print();
     }
 }
 
-double cross_entropy(Vector predicted, Vector expected)
+float cross_entropy(Vector<float> predicted, Vector<float> expected)
 {
     assert(predicted.Size() == expected.Size());
 
-    double acc = 0;
+    float acc = 0;
     for (int i = 0; i < predicted.Size(); i++)
     {
         acc += expected.Get(i) * log(predicted.Get(i));
@@ -97,13 +102,14 @@ double cross_entropy(Vector predicted, Vector expected)
     return -1 * acc;
 }
 
-std::vector<Matrix> Network::CalculateGradient(
-    std::vector<Vector> activations,
-    Vector actual)
+template<typename T>
+std::vector<Matrix<T>> Network<T>::CalculateGradient(
+    std::vector<Vector<T>> activations,
+    Vector<T> actual)
 {
-    std::vector<Matrix> activation_derivative(
+    std::vector<Matrix<T>> activation_derivative(
         activations.size());
-    std::vector<Matrix> cumulative_derivative(
+    std::vector<Matrix<T>> cumulative_derivative(
         activations.size());
 
     activation_derivative[0] = Identity(activations[0].Size());
@@ -115,10 +121,10 @@ std::vector<Matrix> Network::CalculateGradient(
     }
     activation_derivative[i] = softmax_derivative(activations[i]);
 
-    Matrix ha(1, actual.Size());
+    Matrix<T> ha(1, actual.Size());
     for (int j = 0; j < actual.Size(); j++)
     {
-        double t = -1 * actual.Get(j) / activations.back().Get(j);
+        float t = -1 * actual.Get(j) / activations.back().Get(j);
         ha.Set(0, j, t);
     }
 
@@ -130,22 +136,22 @@ std::vector<Matrix> Network::CalculateGradient(
         cumulative_derivative[i] = cumulative_derivative[i + 1] * weights[i].RemoveLastColumn() * activation_derivative[i];
     }
 
-    std::vector<Matrix> network_derivative(weights.size());
+    std::vector<Matrix<T>> network_derivative(weights.size());
     for (int i = 0; i < weights.size(); i++)
     {
         int rows = weights[i].Rows();
         int columns = weights[i].Columns();
-        Matrix weight_derivative(rows, columns);
+        Matrix<T> weight_derivative(rows, columns);
 
         for (int j = 0; j < rows; j++)
         {
             for (int k = 0; k < columns; k++)
             {
-                std::vector<double> t(weights[i].Rows(), 0.0);
+                std::vector<float> t(weights[i].Rows(), 0.0);
 
                 t[j] = k >= activations[i].Size() ? 1 : activations[i].Get(k);
-                Vector zw(t);
-                double hw = (cumulative_derivative[i + 1] * zw).Get(0);
+                Vector<T> zw(t);
+                T hw = (cumulative_derivative[i + 1] * zw).Get(0);
                 weight_derivative.Set(j, k, hw);
             }
         }
