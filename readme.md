@@ -1,4 +1,4 @@
-![circle](nn.2.8.8.2.epoch.64.512.png)
+![circle](images/nn.2.8.8.2.epoch.64.512.png)
 
 To compile the application, type `make`
 
@@ -11,7 +11,7 @@ You must copy the `profile.linux-perf.txt` into either of these web-application 
 * https://www.speedscope.app
 * https://profiler.firefox.com
 
-![flamegraph](sample-flamegraph.png)
+![flamegraph](images/sample-flamegraph.png)
 
 Unsurprisingly, the method `CalculateGradient` takes the most time.
 
