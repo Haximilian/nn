@@ -310,10 +310,12 @@ Matrix<T> Matrix<T>::operator-(const Matrix<T> &m)
     return toReturn;
 }
 
+#define M_ORDER 
+
 template<typename T>
 T Matrix<T>::Get(int row, int column) const
 {
-    return this->matrix[row * this->Columns() + column];
+    return this->matrix[column * this->Rows() + row];
 }
 
 template<typename T>
@@ -324,7 +326,7 @@ void Matrix<T>::Set(int row, int column, T value)
     assert(column <= this->Columns());
 #endif
 
-    this->matrix[row * this->Columns() + column] = value;
+    this->matrix[column * this->Rows() + row] = value;
 }
 
 template<typename T>

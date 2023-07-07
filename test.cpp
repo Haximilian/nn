@@ -1,8 +1,4 @@
-#include <vector>
-
-#include "matrix.hpp"
-#include "nn.hpp"
-#include "dataset.hpp"
+#include <stdio.h>
 
 #include "m.cpp"
 
@@ -11,51 +7,22 @@
 int main(int argc, char** argv) {
     srand(SEED);
 
-    std::vector<std::vector<double>> a {
-        {1.0, 2.0},
-        {3.0, 4.0}
-    };
+    std::cout << sizeof(matrix<double, 16, 16>(return_random)) << std::endl;
+    std::cout << sizeof(matrix<double, 8, 8>(return_random)) << std::endl;
 
-    Matrix A(a);
+    // abstract_matrix<double> m = matrix<double, 16, 16>(return_random)
 
-    A.Print();
+    // matrix<double, 16, 16> m(return_random);
 
-    // std::vector<std::vector<double>> b {
-    //     {5.0, 7.0, 9.0},
-    //     {6.0, 8.0, 10.0}
-    // };
+    // m.print();
 
-    // Matrix B(b);
+    // matrix<double, 16, 2> v(return_random);
 
-    // B.Print();
+    // v.print();
 
-    // Matrix C = A * B;
+    // matrix<double, 16, 2> r = m * v;
 
-    // C.Print();
-
-    // Matrix D = C.Transpose();
-
-    // D.Print();
-
-    // Matrix E = 0.5 * D;
-
-    // E.Print();
-
-    // Matrix F = Identity(5);
-
-    // F.Print();
-
-    matrix<double, 16, 16> m(return_random);
-
-    m.print();
-
-    matrix<double, 16, 2> v(return_random);
-
-    v.print();
-
-    matrix<double, 16, 2> r = m * v;
-
-    r.print();
+    // r.print();
 
     return 0;
 }
