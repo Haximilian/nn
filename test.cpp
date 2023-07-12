@@ -1,28 +1,42 @@
 #include <stdio.h>
 
-#include "m.cpp"
+#include "network.hpp"
+#include "dataset.hpp"
 
 #define SEED 1024
+#define BATCH_SIZE 512
+#define EPOCH_COUNT 64
+
+template<typename T>
+void print(std::vector<T> in)
+{
+    std::cout << "---------- Vector Print ----------" << std::endl;
+
+    for (T element : in)
+    {
+        std::cout << element << std::endl;
+    }
+}
+
+Network<float> network;
 
 int main(int argc, char** argv) {
-    srand(SEED);
 
-    std::cout << sizeof(matrix<double, 16, 16>(return_random)) << std::endl;
-    std::cout << sizeof(matrix<double, 8, 8>(return_random)) << std::endl;
+    Dataset<float> dataset("./train.csv");
 
-    // abstract_matrix<double> m = matrix<double, 16, 16>(return_random)
+    network = Network<float>();
+    network.print();
 
-    // matrix<double, 16, 16> m(return_random);
+    for (int k = 0; k < EPOCH_COUNT * BATCH_SIZE; k++) {
+        int j = k % BATCH_SIZE;
+        std::vector<float> in(dataset.in[j]);
 
-    // m.print();
+        std::vector<std::vector<float>> activations = network.ForwardPropagation(in);
 
-    // matrix<double, 16, 2> v(return_random);
+        print(activations.back());
 
-    // v.print();
 
-    // matrix<double, 16, 2> r = m * v;
-
-    // r.print();
+    }
 
     return 0;
 }
