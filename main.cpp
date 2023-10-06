@@ -1,5 +1,7 @@
 #include <vector>
 #include <array>
+#include <iostream>
+#include <fstream>
 
 #include "matrix.hpp"
 #include "nn.hpp"
@@ -61,26 +63,30 @@ int main(int argc, char** argv) {
 
     // for (int i = 1024; i < 1024 + 16; i++)
     // {
-    //     Vector in(dataset.in[i]);
+    //     Vector<float> in(dataset.in[i]);
     //     in.Print();
 
-    //     Vector out(dataset.out[i]);
+    //     Vector<float> out(dataset.out[i]);
 
     //     out.Print();
 
-    //     std::vector<Vector> activations = network.ForwardPropagation(in);
+    //     std::vector<Vector<flo   at>> activations = network.ForwardPropagation(in);
     //     activations.back().Print();
     // }
+
+    std::ofstream out_file("out.csv");
     
-    // for (double i = -8; i <= 8; i = i + 0.5) {
-    //     for (double j = -8; j <= 8; j = j + 0.5) {
-    //         std::vector<double> in {
-    //             i, j
-    //         };
-    //         double out = network.ForwardPropagation(in).back().Get(0);
-    //         std::cout << i << "," << j << "," << out << std::endl;
-    //     }
-    // }
+    for (float i = -8; i <= 8; i = i + 0.5) {
+        for (float j = -8; j <= 8; j = j + 0.5) {
+            std::vector<float> in {
+                i, j
+            };
+            double out = network.ForwardPropagation(in).back().Get(0);
+            out_file << i << "," << j << "," << out << std::endl;
+        }
+    }
+
+    out_file.close();
 
     // network.Print();
 }

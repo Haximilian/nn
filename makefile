@@ -8,3 +8,5 @@ build-image:
 	 docker build -t perf-valgrind-image .
 run-image:
 	 docker run -it --privileged --pid=host --rm perf-valgrind-image
+wasm:
+	emcc -o main.html main.cpp --preload-file ./train.csv --preload-file ./out.csv -O3 --shell-file application/shell_minimal.html -sFORCE_FILESYSTEM
