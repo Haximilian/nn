@@ -94,9 +94,6 @@
   <div class="emscripten">
     <progress value="0" max="100" id="progress" hidden=1></progress>
   </div>
-  <hr />
-  <textarea class="emscripten" id="output" rows="8"></textarea>
-  <hr>
   <script type='text/javascript'>
     var statusElement = document.getElementById('status');
     var progressElement = document.getElementById('progress');
@@ -124,7 +121,13 @@
               }
             ]
           },
-          options: {}
+          options: {
+            aspectRatio: 1 / 1,
+            responsive: false,
+            legend: {
+              display: false
+            }
+          }
         })
       }],
       postRun: [
@@ -139,7 +142,7 @@
             data: {
               datasets: [
                 {
-                  pointRadius: 3,
+                  pointRadius: 8,
                   pointBackgroundColor: function (context) {
                     var index = context.dataIndex;
                     var value = context.dataset.data[index];
@@ -149,24 +152,66 @@
                 }
               ]
             },
-            options: {}
-          })
+            options: {
+              aspectRatio: 1 / 1,
+              responsive: false,
+              legend: {
+                display: false
+              }
+            }
+          });
+
+          const fitness = FS.readFile('./cross_entropy.csv', { encoding: 'utf8' })
+            .split("\n")
+            .map((e) => e.split(","))
+            .map((t) => t[0]);
+
+          fitness.pop();
+
+          new Chart("fitness", {
+            type: "line",
+            data: {
+              labels: Array.from({ length: fitness.length }, (value, index) => index),
+              datasets: [
+                {
+                  data: fitness,
+                  fill: false,
+                  borderColor: "rgba(255,0,0,1)",
+                  cubicInterpolationMode: 'monotone',
+                  tension: 0.4
+                }
+              ]
+            },
+            options: {
+              aspectRatio: 1 / 1,
+              responsive: false,
+              legend: {
+                display: false
+              },
+              interaction: {
+                intersect: false,
+              },
+              scales: {
+                x: {
+                  display: true,
+                  title: {
+                    display: true
+                  }
+                },
+                y: {
+                  display: true,
+                  title: {
+                    display: true,
+                    text: 'Value'
+                  },
+                }
+              }
+            }
+          });
         }],
       print: (function () {
-        var element = document.getElementById('output');
-        if (element) element.value = ''; // clear browser cache
         return function (text) {
-          if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-          // These replacements are necessary if you render to raw HTML
-          //text = text.replace(/&/g, "&amp;");
-          //text = text.replace(/</g, "&lt;");
-          //text = text.replace(/>/g, "&gt;");
-          //text = text.replace('\n', '<br>', 'g');
           console.log(text);
-          if (element) {
-            element.value += text + "\n";
-            element.scrollTop = element.scrollHeight; // focus on bottom
-          }
         };
       })(),
       setStatus: function (text) {
@@ -209,8 +254,20 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js">
   </script>
 
-  <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
-  <canvas id="outChart" style="width:100%;max-width:700px"></canvas>
+  <div style="display: flex;flex-direction: column;align-items: center;">
+    <h1>
+      Training Dataset
+    </h1>
+    <canvas style="width: 512px; height: 512px" id="myChart"></canvas>
+    <h1>
+      Neural Network Performance
+    </h1>
+    <canvas style="width: 512px; height: 512px" id="outChart"></canvas>
+    <h1>
+      Cross Entropy
+    </h1>
+    <canvas style="width: 512px; height: 512px" id="fitness"></canvas>
+  </div>
 
   {{{ SCRIPT }}}
 

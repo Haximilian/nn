@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
 
     Dataset<float> dataset("./train.csv");
 
+    std::ofstream cross_entropy_file("cross_entropy.csv");
     for (int k = 0; k < EPOCH_COUNT * BATCH_SIZE; k++) {
         int j = k % BATCH_SIZE;
         Vector<float> in(dataset.in[j]);
@@ -55,11 +56,12 @@ int main(int argc, char** argv) {
             network.weights[i] = network.weights[i] - gradients[i] * 0.03;
         }
 
-        // if (j % 128 == 0) {
-        //     // std::cout << "dataset cross entropy" << std::endl;
-        //     std::cout << cross_entropy_dataset(dataset, network) << "," << std::endl;
-        // }
+        if (j % 128 == 0) {
+            // std::cout << "dataset cross entropy" << std::endl;
+            cross_entropy_file << cross_entropy_dataset(dataset, network) << std::endl;
+        }
     }
+    cross_entropy_file.close();
 
     // for (int i = 1024; i < 1024 + 16; i++)
     // {
